@@ -7,11 +7,11 @@ class CsvManip:
     '''
     def add_missing_ts(input_file, output_file):
         '''Doplnění chybějícího timestepu do časové řady
+        Hodnoty v doplněném timestepu jsou totožné z předchozím známým timestepem
         Vstupy:
             input_file:         Vstupní soubor
             output_file:        Výstupní soubor
         '''   
-        
         existujici_data = {}
         with open(input_file, 'r') as file:
             reader = csv.reader(file)
@@ -47,6 +47,22 @@ class CsvManip:
             writer.writerow(header)
             for date, value in serazena_data:
                 writer.writerow([date.strftime('%Y-%m-%d %H:%M:%S')] + value)
+        return
+    
+    def add_row_counter(input_file, output_file):
+        '''Přidání sloupce představujícího počítadlo řádků
+        '''
+        with open(input_file, 'r') as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+
+        rows[0].insert(0, "Row Counter")
+        for i, row in enumerate(rows[1:], start=0):
+            row.insert(0, str(i))
+        
+        with open(output_file, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(rows)
         return
 
     def merge_two_csvs(input_file_1, input_file_2, output_file):
@@ -89,6 +105,8 @@ class CsvManip:
             for row in spojena_data:
                 writer.writerow([row[0].strftime('%Y-%m-%d %H:%M:%S')] + row[1] + row[2])
         return
+    
+    ###
     
     def adjust_times_in_csv(input_file, output_file):
         # Otevřít vstupní soubor CSV a přečíst data
