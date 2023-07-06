@@ -65,6 +65,46 @@ class CsvManip:
             writer.writerows(rows)
         return
 
+    def aggregate_data(input_file, output_file):
+        '''Upraví velikost časových oken
+        '''
+        # Otevřít vstupní soubor CSV a přečíst data
+        with open(input_file, 'r') as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+
+        aggregated_data = {}
+
+        # Projít každý řádek a agregovat hodnoty podle čtvrthodinových okének
+        for row in rows:
+            if len(row) > 1:
+                try:
+                    timestamp = datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S')
+                    value = float(row[1])
+
+                    # Zaokrouhlení časové známky na nejbližší čtvrthodinu dolů
+                    rounded_timestamp = timestamp.replace(minute=0, second=0, microsecond=0)
+
+                    # Přidání hodnoty do agregovaných dat pro dané časové okno
+                    if rounded_timestamp in aggregated_data:
+                        aggregated_data[rounded_timestamp] += value
+                    else:
+                        aggregated_data[rounded_timestamp] = value
+                except (ValueError, IndexError):
+                    pass
+
+        # Vytvořit seznam řádků pro výstupní soubor
+        output_rows = [rows[0]]
+
+        # Projít agregovaná data a přidat je do seznamu řádků
+        for timestamp, value in sorted(aggregated_data.items()):
+            output_rows.append([timestamp.strftime('%Y-%m-%d %H:%M:%S'), value])
+
+        # Uložit výstupní data do souboru CSV
+        with open(output_file, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(output_rows)
+    
     def merge_two_csvs(input_file_1, input_file_2, output_file):
         '''Spojení dvou csv souborů do jednoho
         Vstupy:
@@ -101,7 +141,7 @@ class CsvManip:
 
         with output_file.open('w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['datetime'] + header1[1:] + header2[1:]) 
+            writer.writerow(['datetimes'] + header1[1:] + header2[1:]) 
             for row in spojena_data:
                 writer.writerow([row[0].strftime('%Y-%m-%d %H:%M:%S')] + row[1] + row[2])
         return
